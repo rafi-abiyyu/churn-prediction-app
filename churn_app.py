@@ -2,29 +2,93 @@ import streamlit as st
 import pandas as pd
 import pickle
 import numpy as np
+import plotly.express as px
 
-#settingan page config
+# Page config
 st.set_page_config(
     page_title="Customer Churn Prediction",
     layout="wide"
 )
 
-#load model
+# Custom CSS for white background and styling
+st.markdown("""
+<style>
+    .stApp {
+        background-color: white;
+    }
+    .main {
+        background-color: white;
+    }
+    [data-testid="stAppViewContainer"] {
+        background-color: white;
+    }
+    [data-testid="stHeader"] {
+        background-color: white;
+    }
+    .result-card {
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin: 10px;
+    }
+    .churn-card {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+        color: white;
+    }
+    .stay-card {
+        background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+        color: white;
+    }
+    .result-value {
+        font-size: 28px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    .result-label {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+    .risk-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+    .high-risk {
+        background-color: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+    .low-risk {
+        background-color: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+    .prob-card {
+        background: linear-gradient(135deg, #748ffc 0%, #5c7cfa 100%);
+        color: white;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Load model
 @st.cache_resource
 def load_model():
     with open('model_xgboost.sav', 'rb') as file:
         model = pickle.load(file)
     return model
-model=load_model()
 
-#title
-st.title("Customer Churn Prediction ")
+model = load_model()
+
+# Title
+st.title("🎯 Customer Churn Prediction")
 st.markdown("---")
 
-#column
-col1, col2=st.columns(2)
+# Columns for input
+col1, col2 = st.columns(2)
+
 with col1:
-    
     tenure = st.number_input(
         "Tenure (months)",
         min_value=0.0,
@@ -34,9 +98,11 @@ with col1:
         help="Number of months the customer has been with the company"
     )
     
-    preferred_login_device = st.selectbox(
+    # Radio button for binary: Preferred Login Device
+    preferred_login_device = st.radio(
         "Preferred Login Device",
         options=["Phone", "Computer"],
+        horizontal=True,
         help="Device used most frequently to login"
     )
     
@@ -65,9 +131,11 @@ with col1:
         help="Most frequently used payment method"
     )
     
-    gender = st.selectbox(
+    # Radio button for binary: Gender
+    gender = st.radio(
         "Gender",
         options=["Male", "Female"],
+        horizontal=True,
         help="Customer's gender"
     )
     
@@ -90,7 +158,6 @@ with col1:
     )
 
 with col2:
-    
     prefered_order_cat = st.selectbox(
         "Preferred Order Category",
         options=["Laptop & Accessory", "Phone", "Fashion", "Grocery", "Others"],
@@ -122,12 +189,14 @@ with col2:
         help="Number of addresses saved in the account"
     )
     
-    complain = st.selectbox(
+    # Radio button for binary: Complaint Raised
+    complain_option = st.radio(
         "Complaint Raised",
-        options=[0, 1],
-        format_func=lambda x: "Yes" if x == 1 else "No",
+        options=["No", "Yes"],
+        horizontal=True,
         help="Whether customer has raised any complaint"
     )
+    complain = 1 if complain_option == "Yes" else 0
     
     order_amount_hike_from_last_year = st.number_input(
         "Order Amount Hike from Last Year (%)",
@@ -176,8 +245,8 @@ with col2:
 
 st.markdown("---")
 
-#prediction
-if st.button("Predict", type="primary", use_container_width=True):
+# Prediction
+if st.button(" Predict", type="primary", use_container_width=True):
     input_data = pd.DataFrame({
         'Tenure': [float(tenure)],
         'PreferredLoginDevice': [preferred_login_device],
@@ -199,45 +268,93 @@ if st.button("Predict", type="primary", use_container_width=True):
         'CashbackAmount': [float(cashback_amount)]
     })
     
-    #buat probabilitas prediksi
     try:
         prediction = model.predict(input_data)[0]
         prediction_proba = model.predict_proba(input_data)[0]
         
         # Display results
         st.markdown("---")
-        st.subheader("Prediction Results")
+        st.subheader(" Prediction Results")
         
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.metric(
-                label="Churn Prediction",
-                value="Will Churn" if prediction == 1 else "Will Stay",
-                delta="High Risk" if prediction == 1 else "Low Risk",
-                delta_color="inverse"
-            )
+            if prediction == 1:
+                st.markdown(f"""
+                <div class="result-card churn-card">
+                    <div class="result-label">Churn Prediction</div>
+                    <div class="result-value"> Will Churn</div>
+                    <div class="risk-badge high-risk"> High Risk</div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div class="result-card stay-card">
+                    <div class="result-label">Churn Prediction</div>
+                    <div class="result-value"> Will Stay</div>
+                    <div class="risk-badge low-risk"> Low Risk</div>
+                </div>
+                """, unsafe_allow_html=True)
         
         with col2:
-            st.metric(
-                label="Churn Probability",
-                value=f"{prediction_proba[1]:.2%}",
-                delta=f"{prediction_proba[1] - 0.5:.2%} from baseline"
-            )
+            st.markdown(f"""
+            <div class="result-card prob-card">
+                <div class="result-label">Churn Probability</div>
+                <div class="result-value">📈 {prediction_proba[1]:.2%}</div>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col3:
-            st.metric(
-                label="Retention Probability",
-                value=f"{prediction_proba[0]:.2%}",
-                delta=f"{0.5 - prediction_proba[0]:.2%} from baseline",
-                delta_color="inverse"
-            )        
-        st.markdown("### Probability Distribution")
+            st.markdown(f"""
+            <div class="result-card prob-card">
+                <div class="result-label">Retention Probability</div>
+                <div class="result-value"> {prediction_proba[0]:.2%}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Pie Chart for Probability Distribution
+        st.markdown("### 📈 Probability Distribution")
+        
         prob_df = pd.DataFrame({
             'Outcome': ['Will Stay', 'Will Churn'],
             'Probability': [prediction_proba[0], prediction_proba[1]]
         })
-        st.bar_chart(prob_df.set_index('Outcome'))  
+        
+        fig = px.pie(
+            prob_df, 
+            values='Probability', 
+            names='Outcome',
+            color='Outcome',
+            color_discrete_map={
+                'Will Stay': '#51cf66',
+                'Will Churn': '#ff6b6b'
+            },
+            hole=0.4
+        )
+        
+        fig.update_traces(
+            textposition='inside',
+            textinfo='percent+label',
+            textfont_size=14
+        )
+        
+        fig.update_layout(
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=-0.2,
+                xanchor="center",
+                x=0.5
+            ),
+            paper_bgcolor='white',
+            plot_bgcolor='white',
+            margin=dict(t=20, b=20, l=20, r=20)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
                   
     except Exception as e:
         st.error(f"Error making prediction: {str(e)}")
@@ -246,7 +363,7 @@ if st.button("Predict", type="primary", use_container_width=True):
 # Footer
 st.markdown("---")
 st.markdown("""
-<div style='text-align: center'>
-    <p>Built with Streamlit | XGBoost Model | Customer Churn Prediction</p>
+<div style='text-align: center; color: #666;'>
+    <p>Built with  using Streamlit | XGBoost Model | Customer Churn Prediction</p>
 </div>
 """, unsafe_allow_html=True)
