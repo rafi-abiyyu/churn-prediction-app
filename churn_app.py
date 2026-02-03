@@ -145,7 +145,7 @@ with col1:
         max_value=5.0,
         value=3.0,
         step=1.0,
-        help="Average hours spent on the app per day"
+        help="Average hours spent on the app per day (0-5 hours)"
     )
     
     number_of_device_registered = st.number_input(
@@ -186,7 +186,7 @@ with col2:
         max_value=22,
         value=2,
         step=1,
-        help="Number of addresses saved in the account"
+        help="Number of addresses saved in the account (1-22 addresses)"
     )
     
     complain_option = st.radio(
