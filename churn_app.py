@@ -10,65 +10,71 @@ st.set_page_config(
     layout="wide"
 )
 
+# Define consistent colors
+RED_COLOR = "#DC3545"
+GREEN_COLOR = "#28A745"
+
 # Custom CSS for white background and styling
-st.markdown("""
+st.markdown(f"""
 <style>
-    .stApp {
+    .stApp {{
         background-color: white;
-    }
-    .main {
+    }}
+    .main {{
         background-color: white;
-    }
-    [data-testid="stAppViewContainer"] {
+    }}
+    [data-testid="stAppViewContainer"] {{
         background-color: white;
-    }
-    [data-testid="stHeader"] {
+    }}
+    [data-testid="stHeader"] {{
         background-color: white;
-    }
-    .result-card {
+    }}
+    .result-card {{
         padding: 20px;
         border-radius: 15px;
         text-align: center;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         margin: 10px;
-    }
-    .churn-card {
-        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }}
+    .churn-card {{
+        background-color: {RED_COLOR};
         color: white;
-    }
-    .stay-card {
-        background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+    }}
+    .stay-card {{
+        background-color: {GREEN_COLOR};
         color: white;
-    }
-    .result-value {
+    }}
+    .churn-prob-card {{
+        background-color: {RED_COLOR};
+        color: white;
+    }}
+    .retention-prob-card {{
+        background-color: {GREEN_COLOR};
+        color: white;
+    }}
+    .result-value {{
         font-size: 28px;
         font-weight: bold;
         margin: 10px 0;
-    }
-    .result-label {
+    }}
+    .result-label {{
         font-size: 14px;
         opacity: 0.9;
-    }
-    .risk-badge {
+    }}
+    .risk-badge {{
         display: inline-block;
         padding: 5px 15px;
         border-radius: 20px;
         font-size: 12px;
         font-weight: bold;
         margin-top: 10px;
-    }
-    .high-risk {
         background-color: rgba(255, 255, 255, 0.3);
         color: white;
-    }
-    .low-risk {
-        background-color: rgba(255, 255, 255, 0.3);
-        color: white;
-    }
-    .prob-card {
-        background: linear-gradient(135deg, #748ffc 0%, #5c7cfa 100%);
-        color: white;
-    }
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -82,10 +88,10 @@ def load_model():
 model = load_model()
 
 # Title
-st.title("🎯 Customer Churn Prediction")
+st.title("Customer Churn Prediction")
 st.markdown("---")
 
-# Columns for input
+# Columns for input - 9 inputs each for symmetry
 col1, col2 = st.columns(2)
 
 with col1:
@@ -98,7 +104,6 @@ with col1:
         help="Number of months the customer has been with the company"
     )
     
-    # Radio button for binary: Preferred Login Device
     preferred_login_device = st.radio(
         "Preferred Login Device",
         options=["Phone", "Computer"],
@@ -131,7 +136,6 @@ with col1:
         help="Most frequently used payment method"
     )
     
-    # Radio button for binary: Gender
     gender = st.radio(
         "Gender",
         options=["Male", "Female"],
@@ -156,15 +160,15 @@ with col1:
         step=1,
         help="Number of devices registered to the account"
     )
-
-with col2:
+    
     prefered_order_cat = st.selectbox(
         "Preferred Order Category",
         options=["Laptop & Accessory", "Phone", "Fashion", "Grocery", "Others"],
         format_func=lambda x: "Mobile Phone" if x == "Phone" else x,
         help="Most frequently ordered product category"
     )
-    
+
+with col2:
     satisfaction_score = st.slider(
         "Satisfaction Score",
         min_value=1,
@@ -189,7 +193,6 @@ with col2:
         help="Number of addresses saved in the account"
     )
     
-    # Radio button for binary: Complaint Raised
     complain_option = st.radio(
         "Complaint Raised",
         options=["No", "Yes"],
@@ -246,7 +249,7 @@ with col2:
 st.markdown("---")
 
 # Prediction
-if st.button(" Predict", type="primary", use_container_width=True):
+if st.button("Predict", type="primary", use_container_width=True):
     input_data = pd.DataFrame({
         'Tenure': [float(tenure)],
         'PreferredLoginDevice': [preferred_login_device],
@@ -274,7 +277,7 @@ if st.button(" Predict", type="primary", use_container_width=True):
         
         # Display results
         st.markdown("---")
-        st.subheader(" Prediction Results")
+        st.subheader("Prediction Results")
         
         col1, col2, col3 = st.columns(3)
         
@@ -283,39 +286,39 @@ if st.button(" Predict", type="primary", use_container_width=True):
                 st.markdown(f"""
                 <div class="result-card churn-card">
                     <div class="result-label">Churn Prediction</div>
-                    <div class="result-value"> Will Churn</div>
-                    <div class="risk-badge high-risk"> High Risk</div>
+                    <div class="result-value">Will Churn</div>
+                    <div class="risk-badge">High Risk</div>
                 </div>
                 """, unsafe_allow_html=True)
             else:
                 st.markdown(f"""
                 <div class="result-card stay-card">
                     <div class="result-label">Churn Prediction</div>
-                    <div class="result-value"> Will Stay</div>
-                    <div class="risk-badge low-risk"> Low Risk</div>
+                    <div class="result-value">Will Stay</div>
+                    <div class="risk-badge">Low Risk</div>
                 </div>
                 """, unsafe_allow_html=True)
         
         with col2:
             st.markdown(f"""
-            <div class="result-card prob-card">
+            <div class="result-card churn-prob-card">
                 <div class="result-label">Churn Probability</div>
-                <div class="result-value">📈 {prediction_proba[1]:.2%}</div>
+                <div class="result-value">{prediction_proba[1]:.2%}</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col3:
             st.markdown(f"""
-            <div class="result-card prob-card">
+            <div class="result-card retention-prob-card">
                 <div class="result-label">Retention Probability</div>
-                <div class="result-value"> {prediction_proba[0]:.2%}</div>
+                <div class="result-value">{prediction_proba[0]:.2%}</div>
             </div>
             """, unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
         # Pie Chart for Probability Distribution
-        st.markdown("### 📈 Probability Distribution")
+        st.markdown("### Probability Distribution")
         
         prob_df = pd.DataFrame({
             'Outcome': ['Will Stay', 'Will Churn'],
@@ -328,8 +331,8 @@ if st.button(" Predict", type="primary", use_container_width=True):
             names='Outcome',
             color='Outcome',
             color_discrete_map={
-                'Will Stay': '#51cf66',
-                'Will Churn': '#ff6b6b'
+                'Will Stay': GREEN_COLOR,
+                'Will Churn': RED_COLOR
             },
             hole=0.4
         )
@@ -364,6 +367,6 @@ if st.button(" Predict", type="primary", use_container_width=True):
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666;'>
-    <p>Built with  using Streamlit | XGBoost Model | Customer Churn Prediction</p>
+    <p>Built with Streamlit | XGBoost Model | Customer Churn Prediction</p>
 </div>
 """, unsafe_allow_html=True)
