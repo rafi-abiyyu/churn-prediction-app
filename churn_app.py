@@ -4,17 +4,15 @@ import pickle
 import numpy as np
 import plotly.express as px
 
-# Page config
 st.set_page_config(
     page_title="Customer Churn Prediction",
     layout="wide"
 )
 
-# Define consistent colors
+
 RED_COLOR = "#DC3545"
 GREEN_COLOR = "#28A745"
 
-# Custom CSS for white background and styling
 st.markdown(f"""
 <style>
     .stApp {{
@@ -87,11 +85,9 @@ def load_model():
 
 model = load_model()
 
-# Title
 st.title("Customer Churn Prediction")
 st.markdown("---")
 
-# Columns for input - 9 inputs each for symmetry
 col1, col2 = st.columns(2)
 
 with col1:
@@ -101,7 +97,7 @@ with col1:
         max_value=61.0,
         value=10.0,
         step=1.0,
-        help="Number of months the customer has been with the company"
+        help="Number of months the customer has been with the company (0-61 months)"
     )
     
     preferred_login_device = st.radio(
@@ -123,7 +119,7 @@ with col1:
         max_value=127.0,
         value=15.0,
         step=1.0,
-        help="Distance from warehouse to customer's home"
+        help="Distance from warehouse to customer's home (5-127 km)"
     )
     
     preferred_payment_mode = st.selectbox(
@@ -158,7 +154,7 @@ with col1:
         max_value=6,
         value=3,
         step=1,
-        help="Number of devices registered to the account"
+        help="Number of devices registered to the account (1-6 devices)"
     )
     
     prefered_order_cat = st.selectbox(
@@ -207,7 +203,7 @@ with col2:
         max_value=26.0,
         value=15.0,
         step=1.0,
-        help="Percentage increase in order amount from last year"
+        help="Percentage increase in order amount from last year (11%-26%)"
     )
     
     coupon_used = st.number_input(
@@ -216,7 +212,7 @@ with col2:
         max_value=16.0,
         value=1.0,
         step=1.0,
-        help="Number of coupons used in the last month"
+        help="Number of coupons used in the last month (0-16 coupons)"
     )
     
     order_count = st.number_input(
@@ -234,7 +230,7 @@ with col2:
         max_value=46.0,
         value=5.0,
         step=1.0,
-        help="Number of days since the last order was placed"
+        help="Number of days since the last order was placed (0-46 days)"
     )
     
     cashback_amount = st.number_input(
@@ -243,7 +239,7 @@ with col2:
         max_value=324.99,
         value=150.0,
         step=10.0,
-        help="Average cashback amount received"
+        help="Average cashback amount received (0-324.99)"
     )
 
 st.markdown("---")
@@ -316,8 +312,8 @@ if st.button("Predict", type="primary", use_container_width=True):
             """, unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Pie Chart for Probability Distribution
+    
+       
         st.markdown("### Probability Distribution")
         
         prob_df = pd.DataFrame({
@@ -363,7 +359,6 @@ if st.button("Predict", type="primary", use_container_width=True):
         st.error(f"Error making prediction: {str(e)}")
         st.info("Please check the error details above and ensure all inputs are correct.")
 
-# Footer
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666;'>
